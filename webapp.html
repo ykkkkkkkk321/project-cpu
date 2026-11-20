@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureBank AI — AI &amp; Blockchain Banking Management System</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #0b1120;
+      color: #e2e8f0;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      backdrop-filter: blur(12px);
+    }
+    .nav-tab-active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 182, 212, 0.12));
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #34d399;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-3">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-slate-950 shadow-lg shadow-emerald-500/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 4v5c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V7l7-4z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-lg font-bold tracking-tight text-white truncate">SecureBank AI</h1>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">v2.4 Live</span>
+            </div>
+            <p class="text-xs text-slate-400 truncate">AI Fraud Defense &amp; Immutable Blockchain Ledger</p>
+          </div>
+        </div>
+
+        <!-- Global Status, RBAC & Reset -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <select id="rbac-role" onchange="switchRole()" title="Role-Based Access Control" class="hidden md:block rounded-lg bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-xs font-medium text-indigo-300 focus:outline-none focus:border-indigo-500">
+            <option value="ADMIN">Role: Risk Officer (Admin)</option>
+            <option value="AUDITOR">Role: Security Auditor</option>
+            <option value="CUSTOMER">Role: Customer View</option>
+          </select>
+          <button id="header-chain-badge" onclick="switchTab('blockchain')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20">
+            <span id="header-chain-dot" class="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span id="header-chain-text" class="hidden sm:inline">Ledger Verified</span>
+            <span id="header-chain-text-short" class="sm:hidden">Valid</span>
+          </button>
+          <button id="btn-reset-demo" onclick="resetDemoData()" title="Reset Demo State" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-1" aria-label="Main Navigation">
+        <button data-tab="overview" onclick="switchTab('overview')" class="tab-btn nav-tab-active flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium border border-transparent whitespace-nowrap transition-all">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Overview
+        </button>
+        <button data-tab="transactions" onclick="switchTab('transactions')" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent whitespace-nowrap transition-all">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+          Transactions &amp; AI Fraud
+        </button>
+        <button data-tab="blockchain" onclick="switchTab('blockchain')" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent whitespace-nowrap transition-all">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Blockchain Ledger
+        </button>
+        <button data-tab="customers" onclick="switchTab('customers')" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent whitespace-nowrap transition-all">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Customers &amp; KYC
+        </button>
+        <button data-tab="assistant" onclick="switchTab('assistant')" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/70 border border-transparent whitespace-nowrap transition-all">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          AI Copilot &amp; Decisions
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== TAB 1: OVERVIEW ==================== -->
+    <section id="tab-overview" class="tab-panel space-y-6">
+      <!-- Tamper Alert Banner (hidden when valid) -->
+      <div id="overview-tamper-alert" class="hidden rounded-xl border border-rose-500/50 bg-rose-950/50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-rose-500/20 text-rose-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-rose-200">Blockchain Integrity Breach Detected!</h3>
+            <p class="text-xs text-rose-300/90">Unauthorized modification detected in the immutable ledger. AI defense has locked affected settlements.</p>
+          </div>
+        </div>
+        <button onclick="switchTab('blockchain')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition-colors shrink-0">
+          Inspect Ledger
+        </button>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Protected Volume</span>
+            <span class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+          </div>
+          <div id="kpi-volume" class="mt-3 text-2xl font-bold text-white">₹0</div>
+          <div class="mt-1 text-xs text-emerald-400">Secured via SHA-256 Ledger</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">AI Threats Blocked</span>
+            <span class="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </span>
+          </div>
+          <div id="kpi-blocked" class="mt-3 text-2xl font-bold text-white">0</div>
+          <div id="kpi-flagged-sub" class="mt-1 text-xs text-amber-400">0 flagged for 2FA review</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Blockchain Blocks</span>
+            <span class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </span>
+          </div>
+          <div id="kpi-blocks" class="mt-3 text-2xl font-bold text-white">0</div>
+          <div id="kpi-chain-status" class="mt-1 text-xs text-emerald-400">100% Hash Verified</div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Verified Customers</span>
+            <span class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </span>
+          </div>
+          <div id="kpi-customers" class="mt-3 text-2xl font-bold text-white">0</div>
+          <div class="mt-1 text-xs text-indigo-300">On-Chain KYC Identity Hashes</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glass-card rounded-2xl p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-semibold text-white">AI Risk Score &amp; Transaction Volume</h2>
+              <p class="text-xs text-slate-400">Real-time anomaly detection across recent banking operations</p>
+            </div>
+            <button onclick="switchTab('transactions')" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium">New Transfer &rarr;</button>
+          </div>
+          <div class="relative h-64">
+            <canvas id="volumeRiskChart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5">
+          <div class="mb-4">
+            <h2 class="text-sm font-semibold text-white">AI Decision Breakdown</h2>
+            <p class="text-xs text-slate-400">Automated triage of banking transactions</p>
+          </div>
+          <div class="relative h-64">
+            <canvas id="decisionChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture + Live Activity Feed -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-5">
+          <h2 class="text-sm font-semibold text-white mb-3">How SecureBank AI Solves Traditional Banking Risks</h2>
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3">
+              <span class="px-2 py-1 rounded-md bg-emerald-500/15 text-emerald-400 font-semibold shrink-0">Blockchain</span>
+              <p class="text-slate-300 leading-relaxed">Every approved transaction &amp; KYC record is hashed with <span class="font-mono-code text-emerald-300">SHA-256</span> and linked to the previous block's hash. Any unauthorized edit breaks the chain immediately.</p>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3">
+              <span class="px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-400 font-semibold shrink-0">AI Engine</span>
+              <p class="text-slate-300 leading-relaxed">Evaluates amount anomalies, transaction velocity, cross-border IP risk, and channel patterns in milliseconds to auto-approve, challenge, or block fraud.</p>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3">
+              <span class="px-2 py-1 rounded-md bg-indigo-500/15 text-indigo-400 font-semibold shrink-0">Automation</span>
+              <p class="text-slate-300 leading-relaxed">Automates KYC risk profiling, loan eligibility scoring, and 24/7 customer query resolution without manual operational bottlenecks.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold text-white">Live AI &amp; Ledger Activity</h2>
+            <span class="text-[11px] text-slate-400">Latest 5 events</span>
+          </div>
+          <div id="overview-activity-feed" class="space-y-2.5 flex-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: TRANSACTIONS & AI FRAUD ==================== -->
+    <section id="tab-transactions" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- New Transaction Form -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-white">Initiate Smart Transfer</h2>
+              <p class="text-xs text-slate-400">AI scores risk before minting to Blockchain</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">AI Guard Active</span>
+          </div>
+
+          <form id="tx-form" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
+            <div>
+              <label for="tx-sender" class="block text-xs font-medium text-slate-300 mb-1">Sender Account</label>
+              <select id="tx-sender" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"></select>
+            </div>
+
+            <div>
+              <label for="tx-receiver" class="block text-xs font-medium text-slate-300 mb-1">Receiver Account / Beneficiary</label>
+              <input id="tx-receiver" type="text" required value="ACC-9082 (Apex Cloud Services)" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="tx-amount" class="block text-xs font-medium text-slate-300 mb-1">Amount (₹)</label>
+                <input id="tx-amount" type="number" min="1" step="1" required value="15000" oninput="previewAiRisk()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label for="tx-channel" class="block text-xs font-medium text-slate-300 mb-1">Channel</label>
+                <select id="tx-channel" onchange="previewAiRisk()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                  <option value="UPI">UPI Instant</option>
+                  <option value="NEFT">NEFT / IMPS</option>
+                  <option value="CARD">Corporate Card</option>
+                  <option value="WIRE_INTL">International Wire</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="tx-location" class="block text-xs font-medium text-slate-300 mb-1">Origin Location</label>
+                <select id="tx-location" onchange="previewAiRisk()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                  <option value="IN_HOME">India (Verified Device)</option>
+                  <option value="IN_NEW">India (New IP / City)</option>
+                  <option value="FOREIGN_VPN">Foreign IP / VPN</option>
+                </select>
+              </div>
+              <div>
+                <label for="tx-time" class="block text-xs font-medium text-slate-300 mb-1">Session Context</label>
+                <select id="tx-time" onchange="previewAiRisk()" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                  <option value="NORMAL">Normal Business Hours</option>
+                  <option value="ODD_HOURS">Late Night (02:00 AM)</option>
+                  <option value="RAPID_BURST">Rapid Velocity Burst</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live AI Risk Preview Box -->
+            <div id="ai-preview-box" class="rounded-xl p-3.5 bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-400">Live AI Fraud Risk Preview</span>
+                <span id="ai-preview-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400">Score: 12 / 100 (Low)</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div id="ai-preview-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 12%"></div>
+              </div>
+              <p id="ai-preview-reason" class="text-[11px] text-slate-400">Normal domestic transfer pattern.</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button type="submit" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                Analyze &amp; Execute
+              </button>
+              <button type="button" onclick="fillFraudPreset()" class="py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors">
+                Test Fraud Attack
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Transaction History & Filter -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-7 flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-white">Transaction Monitor</h2>
+              <p class="text-xs text-slate-400">AI-verified settlements &amp; blocked anomalies</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="exportTransactionsCSV()" class="rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 text-xs text-emerald-300 font-medium transition-colors">Export CSV</button>
+              <select id="tx-filter-status" onchange="renderTransactions()" class="rounded-lg bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="ALL">All Statuses</option>
+                <option value="APPROVED">Approved (On-Chain)</option>
+                <option value="FLAGGED">Flagged (2FA Review)</option>
+                <option value="BLOCKED">Blocked by AI</option>
+              </select>
+              <input id="tx-search" type="text" placeholder="Search ID or party..." oninput="renderTransactions()" class="rounded-lg bg-slate-900 border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 w-36 sm:w-44 focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <th class="py-2.5 pr-3">ID / Time</th>
+                  <th class="py-2.5 px-3">Parties</th>
+                  <th class="py-2.5 px-3">Amount</th>
+                  <th class="py-2.5 px-3">AI Risk</th>
+                  <th class="py-2.5 pl-3 text-right">Action / Status</th>
+                </tr>
+              </thead>
+              <tbody id="tx-table-body" class="divide-y divide-slate-800/70 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: BLOCKCHAIN LEDGER ==================== -->
+    <section id="tab-blockchain" class="tab-panel hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base sm:text-lg font-semibold text-white">Immutable SHA-256 Blockchain Ledger</h2>
+            <span id="chain-badge-pill" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Chain Valid</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Each block stores cryptographic hashes computed via Web Crypto SHA-256. Try tampering with a block to test immutability.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
+          <select id="pow-difficulty" onchange="updateDifficulty()" class="rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-cyan-300 font-medium focus:outline-none focus:border-cyan-500">
+            <option value="1">PoW Difficulty: 1 (0...)</option>
+            <option value="2" selected>PoW Difficulty: 2 (00...)</option>
+            <option value="3">PoW Difficulty: 3 (000...)</option>
+          </select>
+          <button onclick="verifyBlockchain(true)" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors">
+            Verify Chain Integrity
+          </button>
+          <button onclick="exportLedgerJSON()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium text-xs transition-colors">
+            Export JSON
+          </button>
+          <button id="btn-restore-chain" onclick="restoreBlockchain()" class="hidden px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition-colors">
+            Restore Original Chain
+          </button>
+        </div>
+      </div>
+
+      <!-- Merkle Root & Smart Contract Guard Bar -->
+      <div class="glass-card rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 font-semibold shrink-0">Merkle Root</span>
+          <span id="merkle-root-val" class="font-mono-code text-slate-300 truncate">Calculating...</span>
+        </div>
+        <span class="text-[11px] text-emerald-400 shrink-0">Smart-Contract Escrow: Active</span>
+      </div>
+
+      <!-- Blocks Container -->
+      <div id="blockchain-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ==================== TAB 4: CUSTOMERS & KYC ==================== -->
+    <section id="tab-customers" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Add Customer Form -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-4">
+          <h2 class="text-base font-semibold text-white mb-1">Onboard Customer &amp; On-Chain KYC</h2>
+          <p class="text-xs text-slate-400 mb-4">AI assigns a risk tier and hashes KYC identity to the blockchain.</p>
+          <form id="customer-form" onsubmit="handleCustomerSubmit(event)" class="space-y-3.5">
+            <div>
+              <label for="cust-name" class="block text-xs font-medium text-slate-300 mb-1">Full Name</label>
+              <input id="cust-name" type="text" required placeholder="e.g., Aarav Sharma" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label for="cust-email" class="block text-xs font-medium text-slate-300 mb-1">Email Address</label>
+              <input id="cust-email" type="email" required placeholder="aarav@example.com" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="cust-balance" class="block text-xs font-medium text-slate-300 mb-1">Initial Deposit (₹)</label>
+                <input id="cust-balance" type="number" min="500" required value="50000" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label for="cust-type" class="block text-xs font-medium text-slate-300 mb-1">Account Type</label>
+                <select id="cust-type" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                  <option value="Savings">Savings</option>
+                  <option value="Current">Current / Business</option>
+                  <option value="Wealth">Wealth Priority</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="cust-doc" class="block text-xs font-medium text-slate-300 mb-1">KYC ID Number (Hashed On-Chain)</label>
+              <input id="cust-doc" type="text" required placeholder="PAN / Aadhaar Last 4" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-400 hover:to-cyan-400 text-white font-semibold text-sm transition-all">
+              Verify KYC &amp; Mint Identity Block
+            </button>
+          </form>
+        </div>
+
+        <!-- Customer Directory -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-8">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-white">Customer Accounts &amp; KYC Hashes</h2>
+              <p class="text-xs text-slate-400">Tamper-proof customer records protected by SHA-256 identity digests</p>
+            </div>
+            <span id="customer-count-badge" class="px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-medium text-slate-300">0 Accounts</span>
+          </div>
+          <div id="customers-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: AI COPILOT & DECISIONS ==================== -->
+    <section id="tab-assistant" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- AI Banking Copilot Chat -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-7 flex flex-col h-[520px]">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <div class="h-8 w-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-semibold text-white">SecureBank AI Assistant</h2>
+                <p class="text-[11px] text-slate-400">Connected to live ledger &amp; fraud telemetry</p>
+              </div>
+            </div>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">Online</span>
+          </div>
+
+          <!-- Messages -->
+          <div id="chat-messages" class="flex-1 overflow-y-auto py-4 space-y-3 pr-1"></div>
+
+          <!-- Quick Prompts -->
+          <div class="flex flex-wrap gap-1.5 pb-3">
+            <button onclick="sendQuickPrompt('Show fraud summary')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 transition-colors">Show fraud summary</button>
+            <button onclick="sendQuickPrompt('Is the blockchain intact?')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 transition-colors">Is the blockchain intact?</button>
+            <button onclick="sendQuickPrompt('Explain AI + Blockchain security')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 transition-colors">Explain AI + Blockchain</button>
+            <button onclick="sendQuickPrompt('Top risk customer?')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 transition-colors">Top risk customer?</button>
+          </div>
+
+          <!-- Input -->
+          <form onsubmit="handleChatSubmit(event)" class="flex gap-2">
+            <input id="chat-input" type="text" placeholder="Ask about fraud alerts, ledger status, or banking operations..." class="flex-1 rounded-xl bg-slate-900 border border-slate-700 px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-colors">Send</button>
+          </form>
+        </div>
+
+        <!-- AI Credit & Loan Decision Support -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-5 flex flex-col justify-between">
+          <div>
+            <h2 class="text-base font-semibold text-white mb-1">AI Credit &amp; Loan Decision Engine</h2>
+            <p class="text-xs text-slate-400 mb-4">Automated underwriting &amp; risk-adjusted decision support</p>
+
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Monthly Income (₹)</span>
+                  <span id="loan-income-val" class="font-semibold text-emerald-400">₹85,000</span>
+                </div>
+                <input id="loan-income" type="range" min="15000" max="500000" step="5000" value="85000" oninput="calculateLoanDecision()" class="w-full accent-emerald-500" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Requested Loan Amount (₹)</span>
+                  <span id="loan-amount-val" class="font-semibold text-cyan-400">₹5,00,000</span>
+                </div>
+                <input id="loan-amount" type="range" min="50000" max="5000000" step="50000" value="500000" oninput="calculateLoanDecision()" class="w-full accent-cyan-500" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Credit Score</span>
+                  <span id="loan-score-val" class="font-semibold text-indigo-400">760</span>
+                </div>
+                <input id="loan-score" type="range" min="300" max="900" step="10" value="760" oninput="calculateLoanDecision()" class="w-full accent-indigo-500" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Existing EMI Obligations (₹/mo)</span>
+                  <span id="loan-emi-val" class="font-semibold text-amber-400">₹12,000</span>
+                </div>
+                <input id="loan-emi" type="range" min="0" max="150000" step="2000" value="12000" oninput="calculateLoanDecision()" class="w-full accent-amber-500" />
+              </div>
+            </div>
+          </div>
+
+          <div id="loan-result-box" class="mt-6 rounded-xl p-4 bg-slate-900/90 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-400">AI Decision</span>
+              <span id="loan-decision-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400">PRE-APPROVED</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+              <div>
+                <span class="text-slate-400 block">Est. Interest Rate</span>
+                <span id="loan-rate" class="text-white font-semibold">9.25% p.a.</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block">Debt-to-Income (DTI)</span>
+                <span id="loan-dti" class="text-white font-semibold">26%</span>
+              </div>
+            </div>
+            <p id="loan-rationale" class="text-[11px] text-slate-400 pt-1">Strong credit score and healthy debt-to-income ratio.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 2FA Smart-Contract Escrow OTP Modal -->
+  <div id="otp-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-card rounded-2xl max-w-sm w-full p-6 space-y-4 border border-cyan-500/40">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">2FA Smart-Contract Escrow</h3>
+        <button onclick="closeOtpModal()" class="text-slate-400 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed">Enter the 6-digit verification OTP to release <span id="otp-tx-label" class="font-mono-code text-cyan-300 font-semibold">TX-8802</span> from escrow onto the Blockchain.</p>
+      <div class="p-2.5 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-200 flex items-center justify-between">
+        <span>Demo Security OTP:</span>
+        <span id="otp-hint-code" class="font-mono-code font-bold tracking-widest text-sm text-white">482910</span>
+      </div>
+      <div>
+        <label for="otp-input" class="block text-xs font-medium text-slate-300 mb-1">Enter 6-Digit OTP</label>
+        <input id="otp-input" type="text" maxlength="6" placeholder="482910" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm font-mono-code tracking-widest text-white focus:outline-none focus:border-cyan-500" />
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeOtpModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300">Cancel</button>
+        <button onclick="confirmOtpRelease()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-xs font-semibold text-slate-950">Verify &amp; Mint Block</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tamper Simulation Modal -->
+  <div id="tamper-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-card rounded-2xl max-w-md w-full p-6 space-y-4 border border-rose-500/40">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Simulate Cyberattack / Data Tampering</h3>
+        <button onclick="closeTamperModal()" class="text-slate-400 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed">Modify the stored transaction payload in <span id="tamper-block-label" class="font-mono-code text-rose-400 font-semibold">Block #1</span> without re-mining the chain. Watch how the SHA-256 hash mismatch exposes the attack.</p>
+      <div>
+        <label for="tamper-new-data" class="block text-xs font-medium text-slate-300 mb-1">Tampered Payload Data</label>
+        <input id="tamper-new-data" type="text" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono-code text-rose-300 focus:outline-none focus:border-rose-500" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeTamperModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300">Cancel</button>
+        <button onclick="applyTamper()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white">Inject Tampered Data</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== CRYPTOGRAPHIC SHA-256 HELPER ====================
+    async function computeSHA256(message) {
+      try {
+        if (window.crypto && window.crypto.subtle) {
+          const msgBuffer = new TextEncoder().encode(message);
+          const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+      } catch (e) {
+        // Fallback below
+      }
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < message.length; i++) {
+        const ch = message.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      const part = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+      return (part + part + part + part).slice(0, 64).padEnd(64, '0');
+    }
+
+    // ==================== INITIAL STATE ====================
+    let state = {
+      customers: [],
+      transactions: [],
+      blockchain: [],
+      originalBlockchainSnapshot: null,
+      chainValid: true,
+      tamperTargetIndex: null,
+      otpTargetTxId: null,
+      otpExpectedCode: null,
+      powDifficulty: 2,
+      role: 'ADMIN',
+      merkleRoot: '',
+      chatHistory: []
+    };
+
+    let volumeChartInstance = null;
+    let decisionChartInstance = null;
+
+    async function initDemoState() {
+      state.customers = [
+        { id: 'ACC-1001', name: 'Rohan Verma', email: 'rohan.verma@securebank.ai', type: 'Wealth', balance: 485000, kycStatus: 'Verified', riskTier: 'Low', kycHash: '' },
+        { id: 'ACC-1002', name: 'Priya Nair', email: 'priya.nair@securebank.ai', type: 'Current', balance: 920000, kycStatus: 'Verified', riskTier: 'Low', kycHash: '' },
+        { id: 'ACC-1003', name: 'Kabir Mehta', email: 'kabir.mehta@securebank.ai', type: 'Savings', balance: 142500, kycStatus: 'Verified', riskTier: 'Medium', kycHash: '' },
+        { id: 'ACC-1004', name: 'Ananya Gupta', email: 'ananya.g@securebank.ai', type: 'Savings', balance: 310000, kycStatus: 'Verified', riskTier: 'Low', kycHash: '' }
+      ];
+
+      for (const c of state.customers) {
+        c.kycHash = await computeSHA256(c.id + '|' + c.name + '|' + c.email + '|KYC_VERIFIED');
+      }
+
+      state.transactions = [
+        { id: 'TX-8801', timestamp: '10:15 AM', sender: 'ACC-1001 (Rohan Verma)', receiver: 'ACC-9082 (Apex Cloud)', amount: 24500, channel: 'NEFT', riskScore: 14, status: 'APPROVED', reason: 'Normal business transfer' },
+        { id: 'TX-8802', timestamp: '10:42 AM', sender: 'ACC-1002 (Priya Nair)', receiver: 'ACC-7741 (Global Freight)', amount: 185000, channel: 'WIRE_INTL', riskScore: 62, status: 'FLAGGED', reason: 'High-value international wire' },
+        { id: 'TX-8803', timestamp: '11:05 AM', sender: 'ACC-1003 (Kabir Mehta)', receiver: 'ACC-0099 (Unknown Offshore)', amount: 420000, channel: 'WIRE_INTL', riskScore: 91, status: 'BLOCKED', reason: 'Foreign VPN + Amount exceeds 2.9x balance' },
+        { id: 'TX-8804', timestamp: '11:28 AM', sender: 'ACC-1004 (Ananya Gupta)', receiver: 'ACC-3310 (Metro Retail)', amount: 4200, channel: 'UPI', riskScore: 8, status: 'APPROVED', reason: 'Verified device & low amount' }
+      ];
+
+      state.blockchain = [];
+      await addBlockToChain('GENESIS_BLOCK | SecureBank AI Network Initialized', 'SYSTEM');
+      await addBlockToChain('TX-8801 | ACC-1001 -> ACC-9082 | ₹24,500 | AI_RISK:14', 'TX_SETTLEMENT');
+      await addBlockToChain('KYC_MINT | ACC-1001..1004 | 4 Verified Identities', 'KYC_REGISTRY');
+      await addBlockToChain('TX-8804 | ACC-1004 -> ACC-3310 | ₹4,200 | AI_RISK:8', 'TX_SETTLEMENT');
+
+      state.originalBlockchainSnapshot = JSON.parse(JSON.stringify(state.blockchain));
+      state.chainValid = true;
+
+      state.chatHistory = [
+        { sender: 'ai', text: 'Hello! I am SecureBank AI Copilot. I monitor real-time fraud risk, verify the SHA-256 blockchain ledger, and automate KYC & credit decisions. Ask me anything or try the quick prompts below.' }
+      ];
+    }
+
+    async function addBlockToChain(dataStr, type) {
+      const index = state.blockchain.length;
+      const prevHash = index === 0 ? '0000000000000000000000000000000000000000000000000000000000000000' : state.blockchain[index - 1].hash;
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const targetPrefix = '0'.repeat(state.powDifficulty || 2);
+      const t0 = performance.now();
+      let nonce = 0;
+      let hash = '';
+      while (nonce < 50000) {
+        hash = await computeSHA256(`${index}|${timestamp}|${type}|${dataStr}|${prevHash}|${nonce}`);
+        if (hash.startsWith(targetPrefix)) break;
+        nonce++;
+      }
+      const mineMs = Math.max(1, Math.round(performance.now() - t0));
+      const block = { index, timestamp, type, data: dataStr, prevHash, nonce, hash, mineMs, valid: true };
+      state.blockchain.push(block);
+      await updateMerkleRoot();
+      return block;
+    }
+
+    async function updateMerkleRoot() {
+      if (!state.blockchain.length) { state.merkleRoot = '0'.repeat(64); return; }
+      let layer = state.blockchain.map(b => b.hash);
+      while (layer.length > 1) {
+        const next = [];
+        for (let i = 0; i < layer.length; i += 2) {
+          const left = layer[i];
+          const right = layer[i + 1] || left;
+          next.push(await computeSHA256(left + right));
+        }
+        layer = next;
+      }
+      state.merkleRoot = layer[0];
+    }
+
+    // ==================== AI FRAUD ENGINE ====================
+    function evaluateAiRisk(senderId, amount, channel, location, timeCtx) {
+      let score = 5;
+      const reasons = [];
+      const cust = state.customers.find(c => c.id === senderId);
+
+      if (amount > 200000) {
+        score += 35;
+        reasons.push('High value (>₹2L)');
+      } else if (amount > 50000) {
+        score += 18;
+        reasons.push('Elevated amount (>₹50k)');
+      }
+
+      if (cust && amount > cust.balance) {
+        score += 30;
+        reasons.push('Exceeds account balance');
+      }
+
+      if (channel === 'WIRE_INTL') {
+        score += 24;
+        reasons.push('Cross-border wire');
+      } else if (channel === 'CARD') {
+        score += 8;
+      }
+
+      if (location === 'FOREIGN_VPN') {
+        score += 28;
+        reasons.push('Foreign IP / VPN anomaly');
+      } else if (location === 'IN_NEW') {
+        score += 12;
+        reasons.push('Unrecognized city IP');
+      }
+
+      if (timeCtx === 'ODD_HOURS') {
+        score += 14;
+        reasons.push('Late-night activity');
+      } else if (timeCtx === 'RAPID_BURST') {
+        score += 22;
+        reasons.push('Rapid velocity burst');
+      }
+
+      score = Math.min(99, Math.max(4, score));
+      let status = 'APPROVED';
+      if (score >= 75) status = 'BLOCKED';
+      else if (score >= 45) status = 'FLAGGED';
+
+      return {
+        score,
+        status,
+        reason: reasons.length ? reasons.join(' • ') : 'Consistent with historical customer behavior'
+      };
+    }
+
+    function previewAiRisk() {
+      const senderId = document.getElementById('tx-sender').value;
+      const amount = Number(document.getElementById('tx-amount').value) || 0;
+      const channel = document.getElementById('tx-channel').value;
+      const location = document.getElementById('tx-location').value;
+      const timeCtx = document.getElementById('tx-time').value;
+
+      const res = evaluateAiRisk(senderId, amount, channel, location, timeCtx);
+      const badge = document.getElementById('ai-preview-badge');
+      const bar = document.getElementById('ai-preview-bar');
+      const reasonEl = document.getElementById('ai-preview-reason');
+
+      bar.style.width = res.score + '%';
+      reasonEl.textContent = res.reason;
+
+      if (res.status === 'BLOCKED') {
+        badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400';
+        badge.textContent = `Score: ${res.score} / 100 (Critical)`;
+        bar.className = 'h-full bg-rose-500 transition-all duration-300';
+      } else if (res.status === 'FLAGGED') {
+        badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400';
+        badge.textContent = `Score: ${res.score} / 100 (Medium)`;
+        bar.className = 'h-full bg-amber-500 transition-all duration-300';
+      } else {
+        badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400';
+        badge.textContent = `Score: ${res.score} / 100 (Low)`;
+        bar.className = 'h-full bg-emerald-500 transition-all duration-300';
+      }
+    }
+
+    function fillFraudPreset() {
+      document.getElementById('tx-amount').value = 350000;
+      document.getElementById('tx-channel').value = 'WIRE_INTL';
+      document.getElementById('tx-location').value = 'FOREIGN_VPN';
+      document.getElementById('tx-time').value = 'RAPID_BURST';
+      document.getElementById('tx-receiver').value = 'ACC-0099 (Unverified Offshore)';
+      previewAiRisk();
+      showToast('Simulated high-risk fraud parameters loaded. Click "Analyze & Execute" to test AI defense.', 'info');
+    }
+
+    async function handleTransactionSubmit(e) {
+      e.preventDefault();
+      if (!state.chainValid) {
+        showToast('Ledger integrity compromised! Restore blockchain before settling new transactions.', 'error');
+        return;
+      }
+
+      const senderId = document.getElementById('tx-sender').value;
+      const receiver = document.getElementById('tx-receiver').value.trim();
+      const amount = Number(document.getElementById('tx-amount').value);
+      const channel = document.getElementById('tx-channel').value;
+      const location = document.getElementById('tx-location').value;
+      const timeCtx = document.getElementById('tx-time').value;
+
+      const cust = state.customers.find(c => c.id === senderId);
+      const evalRes = evaluateAiRisk(senderId, amount, channel, location, timeCtx);
+      const txId = 'TX-' + (8801 + state.transactions.length);
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const newTx = {
+        id: txId,
+        timestamp,
+        sender: cust ? `${cust.id} (${cust.name})` : senderId,
+        receiver,
+        amount,
+        channel,
+        riskScore: evalRes.score,
+        status: evalRes.status,
+        reason: evalRes.reason
+      };
+
+      state.transactions.unshift(newTx);
+
+      if (evalRes.status === 'APPROVED') {
+        if (cust) cust.balance = Math.max(0, cust.balance - amount);
+        await addBlockToChain(`${txId} | ${senderId} -> ${receiver} | ₹${amount.toLocaleString('en-IN')} | AI_RISK:${evalRes.score}`, 'TX_SETTLEMENT');
+        state.originalBlockchainSnapshot = JSON.parse(JSON.stringify(state.blockchain));
+        showToast(`${txId} approved by AI (Risk ${evalRes.score}) & minted to Blockchain!`, 'success');
+      } else if (evalRes.status === 'FLAGGED') {
+        showToast(`${txId} flagged for 2FA review (Risk ${evalRes.score}). Pending manual approval.`, 'warning');
+      } else {
+        showToast(`${txId} BLOCKED by AI Fraud Engine (Risk ${evalRes.score})!`, 'error');
+      }
+
+      renderAll();
+    }
+
+    function approveFlaggedTx(txId) {
+      const tx = state.transactions.find(t => t.id === txId);
+      if (!tx || tx.status !== 'FLAGGED') return;
+      state.otpTargetTxId = txId;
+      state.otpExpectedCode = String(Math.floor(100000 + Math.random() * 900000));
+      document.getElementById('otp-tx-label').textContent = txId;
+      document.getElementById('otp-hint-code').textContent = state.otpExpectedCode;
+      document.getElementById('otp-input').value = '';
+      const m = document.getElementById('otp-modal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeOtpModal() {
+      const m = document.getElementById('otp-modal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    async function confirmOtpRelease() {
+      const entered = document.getElementById('otp-input').value.trim();
+      if (entered !== state.otpExpectedCode) {
+        showToast('Invalid 2FA OTP. Smart-contract escrow remains locked.', 'error');
+        return;
+      }
+      const tx = state.transactions.find(t => t.id === state.otpTargetTxId);
+      closeOtpModal();
+      if (!tx) return;
+      tx.status = 'APPROVED';
+      tx.reason += ' (2FA Escrow Released)';
+      await addBlockToChain(`${tx.id} | ${tx.sender.split(' ')[0]} -> ${tx.receiver} | ₹${tx.amount.toLocaleString('en-IN')} | 2FA_ESCROW_RELEASED`, 'TX_SETTLEMENT');
+      state.originalBlockchainSnapshot = JSON.parse(JSON.stringify(state.blockchain));
+      showToast(`${tx.id} 2FA verified! PoW block mined to Blockchain.`, 'success');
+      renderAll();
+    }
+
+    function updateDifficulty() {
+      state.powDifficulty = Number(document.getElementById('pow-difficulty').value) || 2;
+      showToast(`PoW Mining Difficulty set to ${state.powDifficulty} leading zero(s).`, 'info');
+    }
+
+    function switchRole() {
+      state.role = document.getElementById('rbac-role').value;
+      const msgs = {
+        ADMIN: 'Switched to Risk Officer (Full Access: Transfers, 2FA, KYC, Ledger).',
+        AUDITOR: 'Switched to Security Auditor (Focus: Blockchain Integrity & Tamper Audit).',
+        CUSTOMER: 'Switched to Customer View (Focus: Transfers, Copilot & Loan Check).'
+      };
+      showToast(msgs[state.role] || 'Role updated.', 'info');
+      if (state.role === 'AUDITOR') switchTab('blockchain');
+      else if (state.role === 'CUSTOMER') switchTab('transactions');
+      else switchTab('overview');
+    }
+
+    function downloadFile(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportLedgerJSON() {
+      const payload = JSON.stringify({ merkleRoot: state.merkleRoot, chainValid: state.chainValid, blocks: state.blockchain }, null, 2);
+      downloadFile('securebank-blockchain-ledger.json', payload, 'application/json');
+      showToast('Exported immutable blockchain ledger as JSON.', 'success');
+    }
+
+    function exportTransactionsCSV() {
+      const header = 'ID,Timestamp,Sender,Receiver,Amount_INR,Channel,RiskScore,Status,Reason';
+      const rows = state.transactions.map(t =>
+        [t.id, t.timestamp, `"${t.sender}"`, `"${t.receiver}"`, t.amount, t.channel, t.riskScore, t.status, `"${t.reason}"`].join(',')
+      );
+      downloadFile('securebank-transactions.csv', [header, ...rows].join('\n'), 'text/csv');
+      showToast('Exported transaction monitor log as CSV.', 'success');
+    }
+
+    // ==================== BLOCKCHAIN VERIFICATION & TAMPERING ====================
+    async function verifyBlockchain(notify = false) {
+      let allValid = true;
+      for (let i = 0; i < state.blockchain.length; i++) {
+        const blk = state.blockchain[i];
+        const expectedPrev = i === 0 ? '0000000000000000000000000000000000000000000000000000000000000000' : state.blockchain[i - 1].hash;
+        const recalculated = await computeSHA256(`${blk.index}|${blk.timestamp}|${blk.type}|${blk.data}|${blk.prevHash}|${blk.nonce}`);
+        const hashMatches = blk.hash === recalculated;
+        const linkMatches = blk.prevHash === expectedPrev;
+        blk.valid = hashMatches && linkMatches && allValid;
+        if (!hashMatches || !linkMatches) {
+          allValid = false;
+          blk.valid = false;
+        }
+      }
+      state.chainValid = allValid;
+      renderBlockchain();
+      updateHeaderAndAlerts();
+      if (notify) {
+        if (allValid) showToast('All blocks verified! Zero tampering detected.', 'success');
+        else showToast('Tamper alert! Hash mismatch detected in the blockchain.', 'error');
+      }
+    }
+
+    function openTamperModal(index) {
+      state.tamperTargetIndex = index;
+      const blk = state.blockchain[index];
+      document.getElementById('tamper-block-label').textContent = `Block #${blk.index}`;
+      document.getElementById('tamper-new-data').value = blk.data + ' [MODIFIED: ₹9,99,999]';
+      const modal = document.getElementById('tamper-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTamperModal() {
+      const modal = document.getElementById('tamper-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function applyTamper() {
+      const idx = state.tamperTargetIndex;
+      if (idx === null || !state.blockchain[idx]) return;
+      state.blockchain[idx].data = document.getElementById('tamper-new-data').value;
+      closeTamperModal();
+      await verifyBlockchain(true);
+      renderOverview();
+    }
+
+    async function restoreBlockchain() {
+      if (state.originalBlockchainSnapshot) {
+        state.blockchain = JSON.parse(JSON.stringify(state.originalBlockchainSnapshot));
+        await verifyBlockchain(false);
+        renderAll();
+        showToast('Blockchain restored to verified immutable state.', 'success');
+      }
+    }
+
+    // ==================== CUSTOMERS & KYC ====================
+    async function handleCustomerSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('cust-name').value.trim();
+      const email = document.getElementById('cust-email').value.trim();
+      const balance = Number(document.getElementById('cust-balance').value);
+      const type = document.getElementById('cust-type').value;
+      const doc = document.getElementById('cust-doc').value.trim();
+
+      const id = 'ACC-' + (1001 + state.customers.length);
+      const kycHash = await computeSHA256(`${id}|${name}|${email}|${doc}`);
+      const riskTier = balance > 500000 ? 'Low' : 'Medium';
+
+      state.customers.push({ id, name, email, type, balance, kycStatus: 'Verified', riskTier, kycHash });
+      await addBlockToChain(`KYC_MINT | ${id} (${name}) | Hash:${kycHash.slice(0, 12)}...`, 'KYC_REGISTRY');
+      state.originalBlockchainSnapshot = JSON.parse(JSON.stringify(state.blockchain));
+
+      document.getElementById('customer-form').reset();
+      document.getElementById('cust-balance').value = 50000;
+      showToast(`${name} onboarded! KYC hash minted to Blockchain.`, 'success');
+      renderAll();
+    }
+
+    // ==================== AI COPILOT & LOAN DECISION ====================
+    function sendQuickPrompt(text) {
+      document.getElementById('chat-input').value = text;
+      handleChatSubmit({ preventDefault: () => {} });
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const query = input.value.trim();
+      if (!query) return;
+
+      state.chatHistory.push({ sender: 'user', text: query });
+      input.value = '';
+
+      const q = query.toLowerCase();
+      let reply = '';
+
+      if (q.includes('fraud') || q.includes('alert') || q.includes('block')) {
+        const blocked = state.transactions.filter(t => t.status === 'BLOCKED');
+        const flagged = state.transactions.filter(t => t.status === 'FLAGGED');
+        reply = `AI Fraud Engine Summary: ${blocked.length} transaction(s) blocked and ${flagged.length} flagged for 2FA review. Latest blocked threat: ${blocked[0] ? `${blocked[0].id} (₹${blocked[0].amount.toLocaleString('en-IN')} - ${blocked[0].reason})` : 'None'}.`;
+      } else if (q.includes('blockchain') || q.includes('intact') || q.includes('ledger') || q.includes('valid')) {
+        reply = state.chainValid
+          ? `Blockchain Status: 100% VERIFIED across ${state.blockchain.length} blocks. All SHA-256 hashes and previous-hash links match cleanly.`
+          : `ALERT: Blockchain integrity is COMPROMISED! Unauthorized data modification detected. Visit the Blockchain Ledger tab to inspect or restore.`;
+      } else if (q.includes('customer') || q.includes('risk') || q.includes('kyc')) {
+        const med = state.customers.filter(c => c.riskTier !== 'Low');
+        reply = `We currently manage ${state.customers.length} KYC-verified accounts on-chain. ${med.length ? `Medium-risk profile(s) to monitor: ${med.map(c => c.name).join(', ')}.` : 'All customers are currently Low Risk.'}`;
+      } else if (q.includes('explain') || q.includes('how') || q.includes('work')) {
+        reply = `SecureBank AI combines two layers: (1) Real-time AI scores every transfer for amount, velocity, and IP anomalies before settlement; (2) Approved transactions and KYC identities are SHA-256 hashed into an immutable blockchain ledger so no record can be silently altered.`;
+      } else {
+        reply = `I checked live telemetry: ${state.transactions.length} transactions processed, ${state.blockchain.length} blocks on-chain (${state.chainValid ? 'Valid' : 'Tampered'}), and ${state.customers.length} verified customers. Try asking about "fraud summary" or "blockchain status".`;
+      }
+
+      state.chatHistory.push({ sender: 'ai', text: reply });
+      renderChat();
+    }
+
+    function calculateLoanDecision() {
+      const income = Number(document.getElementById('loan-income').value);
+      const amount = Number(document.getElementById('loan-amount').value);
+      const score = Number(document.getElementById('loan-score').value);
+      const existingEmi = Number(document.getElementById('loan-emi').value);
+
+      document.getElementById('loan-income-val').textContent = '₹' + income.toLocaleString('en-IN');
+      document.getElementById('loan-amount-val').textContent = '₹' + amount.toLocaleString('en-IN');
+      document.getElementById('loan-score-val').textContent = score;
+      document.getElementById('loan-emi-val').textContent = '₹' + existingEmi.toLocaleString('en-IN');
+
+      const newEmi = Math.round(amount / 48);
+      const dti = Math.round(((existingEmi + newEmi) / Math.max(1, income)) * 100);
+
+      const badge = document.getElementById('loan-decision-badge');
+      const rateEl = document.getElementById('loan-rate');
+      const dtiEl = document.getElementById('loan-dti');
+      const ratEl = document.getElementById('loan-rationale');
+
+      dtiEl.textContent = dti + '%';
+
+      if (score >= 720 && dti <= 45) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400';
+        badge.textContent = 'PRE-APPROVED';
+        rateEl.textContent = score >= 800 ? '8.50% p.a.' : '9.25% p.a.';
+        ratEl.textContent = 'Strong credit score and healthy debt-to-income ratio. Eligible for instant smart-contract disbursal.';
+      } else if (score >= 620 && dti <= 60) {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400';
+        badge.textContent = 'MANUAL REVIEW';
+        rateEl.textContent = '11.40% p.a.';
+        ratEl.textContent = 'Moderate DTI or credit score. AI recommends collateral verification or co-applicant.';
+      } else {
+        badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400';
+        badge.textContent = 'HIGH RISK / DECLINED';
+        rateEl.textContent = 'N/A';
+        ratEl.textContent = `DTI (${dti}%) or Credit Score (${score}) breaches automated underwriting threshold.`;
+      }
+    }
+
+    // ==================== RENDERING ====================
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById('tab-' + tabName);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('nav-tab-active');
+          btn.classList.remove('text-slate-400');
+        } else {
+          btn.classList.remove('nav-tab-active');
+          btn.classList.add('text-slate-400');
+        }
+      });
+
+      if (tabName === 'overview') {
+        renderCharts();
+      }
+    }
+
+    function updateHeaderAndAlerts() {
+      const dot = document.getElementById('header-chain-dot');
+      const text = document.getElementById('header-chain-text');
+      const shortText = document.getElementById('header-chain-text-short');
+      const badge = document.getElementById('header-chain-badge');
+      const alertBanner = document.getElementById('overview-tamper-alert');
+      const chainPill = document.getElementById('chain-badge-pill');
+      const restoreBtn = document.getElementById('btn-restore-chain');
+
+      if (state.chainValid) {
+        dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+        text.textContent = 'Ledger Verified';
+        shortText.textContent = 'Valid';
+        badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20';
+        alertBanner.classList.add('hidden');
+        chainPill.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30';
+        chainPill.textContent = 'Chain Valid';
+        restoreBtn.classList.add('hidden');
+      } else {
+        dot.className = 'h-2 w-2 rounded-full bg-rose-400 animate-ping';
+        text.textContent = 'Tamper Detected!';
+        shortText.textContent = 'Breach';
+        badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30';
+        alertBanner.classList.remove('hidden');
+        chainPill.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/40';
+        chainPill.textContent = 'Chain Compromised';
+        restoreBtn.classList.remove('hidden');
+      }
+    }
+
+    function renderOverview() {
+      const totalVol = state.transactions
+        .filter(t => t.status === 'APPROVED')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const blockedCount = state.transactions.filter(t => t.status === 'BLOCKED').length;
+      const flaggedCount = state.transactions.filter(t => t.status === 'FLAGGED').length;
+
+      document.getElementById('kpi-volume').textContent = '₹' + totalVol.toLocaleString('en-IN');
+      document.getElementById('kpi-blocked').textContent = blockedCount;
+      document.getElementById('kpi-flagged-sub').textContent = `${flaggedCount} flagged for 2FA review`;
+      document.getElementById('kpi-blocks').textContent = state.blockchain.length;
+      document.getElementById('kpi-chain-status').textContent = state.chainValid ? '100% Hash Verified' : 'Hash Mismatch Detected';
+      document.getElementById('kpi-chain-status').className = state.chainValid ? 'mt-1 text-xs text-emerald-400' : 'mt-1 text-xs text-rose-400 font-semibold';
+      document.getElementById('kpi-customers').textContent = state.customers.length;
+
+      const feed = document.getElementById('overview-activity-feed');
+      feed.innerHTML = state.transactions.slice(0, 5).map(tx => {
+        const color = tx.status === 'APPROVED' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+          : tx.status === 'FLAGGED' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+          : 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+        return `
+          <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-mono-code text-xs font-semibold text-white">${tx.id}</span>
+                <span class="text-[11px] text-slate-400 truncate">${tx.sender.split(' ')[0]} &rarr; ${tx.receiver}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5 truncate">${tx.reason}</div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-xs font-semibold text-white">₹${tx.amount.toLocaleString('en-IN')}</div>
+              <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${color}">${tx.status}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderCharts();
+    }
+
+    function renderCharts() {
+      const volCanvas = document.getElementById('volumeRiskChart');
+      const decCanvas = document.getElementById('decisionChart');
+      if (!volCanvas || !decCanvas || typeof Chart === 'undefined') return;
+
+      const recent = [...state.transactions].slice(0, 6).reverse();
+      const labels = recent.map(t => t.id);
+      const amounts = recent.map(t => Math.round(t.amount / 1000));
+      const risks = recent.map(t => t.riskScore);
+
+      if (volumeChartInstance) volumeChartInstance.destroy();
+      volumeChartInstance = new Chart(volCanvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Amount (₹ Thousands)',
+              data: amounts,
+              backgroundColor: 'rgba(16, 185, 129, 0.45)',
+              borderColor: 'rgba(16, 185, 129, 1)',
+              borderWidth: 1,
+              borderRadius: 6,
+              yAxisID: 'y'
+            },
+            {
+              label: 'AI Risk Score (0-100)',
+              data: risks,
+              type: 'line',
+              borderColor: '#f43f5e',
+              backgroundColor: 'rgba(244, 63, 94, 0.2)',
+              tension: 0.35,
+              pointRadius: 4,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(51,65,85,0.3)' } },
+            y: { position: 'left', ticks: { color: '#34d399', font: { size: 11 } }, grid: { color: 'rgba(51,65,85,0.3)' } },
+            y1: { position: 'right', min: 0, max: 100, ticks: { color: '#fb7185', font: { size: 11 } }, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+
+      const approved = state.transactions.filter(t => t.status === 'APPROVED').length;
+      const flagged = state.transactions.filter(t => t.status === 'FLAGGED').length;
+      const blocked = state.transactions.filter(t => t.status === 'BLOCKED').length;
+
+      if (decisionChartInstance) decisionChartInstance.destroy();
+      decisionChartInstance = new Chart(decCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: ['Approved (On-Chain)', 'Flagged (2FA)', 'Blocked (AI)'],
+          datasets: [{
+            data: [approved, flagged, blocked],
+            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+            borderColor: '#0f172a',
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '66%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#cbd5e1', padding: 14, font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function renderTransactions() {
+      const senderSelect = document.getElementById('tx-sender');
+      const currentVal = senderSelect.value;
+      senderSelect.innerHTML = state.customers.map(c => `<option value="${c.id}">${c.id} — ${c.name} (₹${c.balance.toLocaleString('en-IN')})</option>`).join('');
+      if (currentVal && state.customers.some(c => c.id === currentVal)) senderSelect.value = currentVal;
+
+      const filter = document.getElementById('tx-filter-status').value;
+      const search = document.getElementById('tx-search').value.toLowerCase();
+
+      const filtered = state.transactions.filter(t => {
+        const matchStatus = filter === 'ALL' || t.status === filter;
+        const matchSearch = !search || t.id.toLowerCase().includes(search) || t.sender.toLowerCase().includes(search) || t.receiver.toLowerCase().includes(search);
+        return matchStatus && matchSearch;
+      });
+
+      const tbody = document.getElementById('tx-table-body');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No matching transactions found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => {
+        const badgeClass = t.status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-400'
+          : t.status === 'FLAGGED' ? 'bg-amber-500/15 text-amber-400'
+          : 'bg-rose-500/15 text-rose-400';
+        return `
+          <tr class="hover:bg-slate-900/50 transition-colors">
+            <td class="py-3 pr-3">
+              <div class="font-mono-code font-semibold text-white">${t.id}</div>
+              <div class="text-[11px] text-slate-400">${t.timestamp} • ${t.channel}</div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="text-slate-200 font-medium">${t.sender}</div>
+              <div class="text-[11px] text-slate-400">&rarr; ${t.receiver}</div>
+            </td>
+            <td class="py-3 px-3 font-semibold text-white">₹${t.amount.toLocaleString('en-IN')}</td>
+            <td class="py-3 px-3">
+              <span class="font-mono-code font-semibold ${t.riskScore >= 75 ? 'text-rose-400' : t.riskScore >= 45 ? 'text-amber-400' : 'text-emerald-400'}">${t.riskScore}/100</span>
+              <div class="text-[10px] text-slate-400 max-w-[140px] truncate" title="${t.reason}">${t.reason}</div>
+            </td>
+            <td class="py-3 pl-3 text-right">
+              <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeClass}">${t.status}</span>
+              ${t.status === 'FLAGGED' ? `<button onclick="approveFlaggedTx('${t.id}')" class="block ml-auto mt-1 text-[10px] text-cyan-400 hover:underline font-medium">Verify 2FA</button>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderBlockchain() {
+      const mrEl = document.getElementById('merkle-root-val');
+      if (mrEl) mrEl.textContent = state.merkleRoot || '0'.repeat(64);
+      const container = document.getElementById('blockchain-container');
+      container.innerHTML = state.blockchain.map((blk, i) => {
+        const borderClass = blk.valid ? 'border-emerald-500/30' : 'border-rose-500/60 bg-rose-950/20';
+        const pillClass = blk.valid ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/20 text-rose-400';
+        return `
+          <div class="glass-card rounded-2xl p-4 border ${borderClass} space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-800 font-mono-code text-xs font-bold text-white">Block #${blk.index}</span>
+                <span class="text-[11px] text-slate-400">${blk.timestamp}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${pillClass}">${blk.valid ? 'VERIFIED' : 'TAMPERED'}</span>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs font-mono-code text-slate-200 break-all">
+              ${blk.data}
+            </div>
+
+            <div class="space-y-1.5 text-[11px] font-mono-code">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-slate-400 shrink-0">Prev Hash:</span>
+                <span class="text-slate-300 truncate">${blk.prevHash}</span>
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-slate-400 shrink-0">Block Hash:</span>
+                <span class="${blk.valid ? 'text-emerald-400' : 'text-rose-400'} truncate">${blk.hash}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+              <span class="text-[11px] text-slate-400">Nonce: <span class="font-mono-code text-slate-200">${blk.nonce}</span> • PoW: <span class="text-cyan-300">${blk.mineMs || 2}ms</span></span>
+              ${i > 0 ? `<button onclick="openTamperModal(${blk.index})" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-[11px] font-medium transition-colors">Simulate Tamper</button>` : '<span class="text-[11px] text-cyan-400 font-medium">Genesis Anchor</span>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCustomers() {
+      document.getElementById('customer-count-badge').textContent = `${state.customers.length} Accounts`;
+      const grid = document.getElementById('customers-grid');
+      grid.innerHTML = state.customers.map(c => `
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="text-sm font-semibold text-white">${c.name}</div>
+              <div class="text-xs text-slate-400">${c.id} • ${c.type}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400">KYC ${c.kycStatus}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-400">Balance</span>
+            <span class="text-sm font-bold text-white">₹${c.balance.toLocaleString('en-IN')}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400">AI Risk Tier</span>
+            <span class="${c.riskTier === 'Low' ? 'text-emerald-400' : 'text-amber-400'} font-medium">${c.riskTier} Risk</span>
+          </div>
+          <div class="pt-2 border-t border-slate-800/80 text-[10px] font-mono-code text-slate-400 truncate" title="${c.kycHash}">
+            KYC Hash: <span class="text-indigo-300">${c.kycHash}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderChat() {
+      const box = document.getElementById('chat-messages');
+      box.innerHTML = state.chatHistory.map(m => {
+        if (m.sender === 'user') {
+          return `<div class="flex justify-end"><div class="max-w-[82%] rounded-2xl rounded-br-sm px-3.5 py-2.5 bg-emerald-600 text-white text-xs leading-relaxed">${m.text}</div></div>`;
+        }
+        return `<div class="flex justify-start"><div class="max-w-[85%] rounded-2xl rounded-bl-sm px-3.5 py-2.5 bg-slate-800/90 border border-slate-700 text-slate-200 text-xs leading-relaxed">${m.text}</div></div>`;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const colors = {
+        success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+        error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
+        warning: 'bg-amber-950/95 border-amber-500/50 text-amber-200',
+        info: 'bg-slate-900/95 border-cyan-500/50 text-cyan-200'
+      };
+      const el = document.createElement('div');
+      el.className = `pointer-events-auto rounded-xl border px-4 py-3 text-xs font-medium shadow-xl transition-all ${colors[type] || colors.info}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3600);
+    }
+
+    function renderAll() {
+      updateHeaderAndAlerts();
+      renderOverview();
+      renderTransactions();
+      renderBlockchain();
+      renderCustomers();
+      renderChat();
+      previewAiRisk();
+      calculateLoanDecision();
+    }
+
+    async function resetDemoData() {
+      await initDemoState();
+      renderAll();
+      showToast('Demo state reset to clean baseline.', 'info');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initDemoState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
